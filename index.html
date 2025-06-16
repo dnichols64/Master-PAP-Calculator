@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PAP Calculator Selector</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    label, select { display: block; margin: 10px 0; font-size: 1.1em; }
+    iframe { margin-top: 20px; border: 1px solid #ccc; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Select a PAP Calculator</h1>
+
+  <label for="device">What PAP device would you like to calculate?</label>
+  <select id="device">
+    <option value="">-- Select Device --</option>
+    <option value="resmed">ResMed</option>
+    <option value="luna">Luna</option>
+  </select>
+
+  <div id="resmedModes" style="display:none;">
+    <label for="resmedMode">Choose your ResMed PAP mode:</label>
+    <select id="resmedMode">
+      <option value="">-- Select Mode --</option>
+      <option value="vauto">ResMed VAuto</option>
+      <option value="asv">ResMed ASV</option>
+      <option value="asvauto">ResMed ASVAuto</option>
+    </select>
+  </div>
+
+  <iframe id="calculatorFrame" width="100%" height="1000" style="display:none;"></iframe>
+
+  <script>
+    const deviceSelect = document.getElementById('device');
+    const resmedModes = document.getElementById('resmedModes');
+    const resmedModeSelect = document.getElementById('resmedMode');
+    const iframe = document.getElementById('calculatorFrame');
+
+    deviceSelect.addEventListener('change', function () {
+      if (this.value === 'resmed') {
+        resmedModes.style.display = 'block';
+        iframe.style.display = 'none';
+        resmedModeSelect.value = "";
+      } else {
+        resmedModes.style.display = 'none';
+        iframe.style.display = 'none';
+        alert("Luna calculator coming soon!");
+      }
+    });
+
+    resmedModeSelect.addEventListener('change', function () {
+      let url = "";
+      switch (this.value) {
+        case 'vauto':
+          url = 'https://dnichols64.github.io/resmed-vauto-calculator/';
+          break;
+        case 'asv':
+          url = 'https://dnichols64.github.io/Resmed-ASV-mode-calculator/';
+          break;
+        case 'asvauto':
+          url = 'https://dnichols64.github.io/Resmed-ASVauto/';
+          break;
+      }
+
+      if (url) {
+        iframe.src = url;
+        iframe.style.display = 'block';
+      } else {
+        iframe.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
