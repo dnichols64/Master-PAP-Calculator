@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResMed PAP Calculator Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .navigation {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 15px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 160px;
+            text-align: center;
+        }
+        
+        .nav-btn:hover {
+            border-color: #4facfe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.2);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-color: #4facfe;
+        }
+        
+        .calculator-section {
+            padding: 30px;
+            display: none;
+        }
+        
+        .calculator-section.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        input[readonly] {
+            background: #f8fafc;
+            border-color: #cbd5e0;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        
+        .calculate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin: 20px 0;
+            width: 100%;
+            max-width: 200px;
+            display: none; /* Hide calculate buttons since we have real-time calculation */
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .results {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #4facfe;
+        }
+        
+        .results h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #721c24;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #0c5460;
+        }
+        
+        .constraint-info {
+            background: #e7f3ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .constraint-info h4 {
+            margin-bottom: 10px;
+            color: #4facfe;
+        }
+        
+        .constraint-info ul {
+            margin-left: 20px;
+        }
+        
+        .constraint-info li {
+            margin-bottom: 5px;
+        }
+        
+        .row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .col {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .ipap-display {
+            background: #e8f5e8;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #28a745;
+        }
+        
+        .ipap-display h4 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .coming-soon h3 {
+            margin-bottom: 20px;
+            color: #495057;
+        }
+        
+        .coming-soon .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .nav-btn {
+                min-width: auto;
+            }
+            
+            .row {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ResMed PAP Calculator Suite</h1>
+            <p>Comprehensive calculators for all ResMed PAP devices</p>
+        </div>
+        
+        <div class="navigation">
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showCalculator('asvauto')">ResMed ASVAuto</button>
+                <button class="nav-btn" onclick="showCalculator('asv')">ResMed ASV</button>
+                <button class="nav-btn" onclick="showCalculator('vauto')">ResMed VAuto</button>
+                <button class="nav-btn" onclick="showCalculator('luna')">Luna (Coming Soon)</button>
+            </div>
+        </div>
+        
+        <!-- ASVAuto Calculator -->
+        <div id="asvauto-calculator" class="calculator-section active">
+            <div class="constraint-info">
+                <h4>ResMed ASVAuto Machine Rules (Verified):</h4>
+                <ul>
+                    <li>EPAP Range: 4.0-15.0 cmH₂O (0.2 increments)</li>
+                    <li>PS Range: 0.0-20.0 cmH₂O (0.2 increments)</li>
+                    <li>Max PS Limit = 25 - Min EPAP (ceiling at 20)</li>
+                    <li>Machine prevents Min > Max entries</li>
+                    <li>IPAP = EPAP + PS (used for internal validation)</li>
+                </ul>
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="asvauto-minEpap">Desired Min EPAP (cmH₂O):</label>
+                        <input type="number" id="asvauto-minEpap" min="4" max="15" step="0.2" value="4.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="asvauto-maxEpap">Desired Max EPAP (cmH₂O):</label>
+                        <input type="number" id="asvauto-maxEpap" min="4" max="25" step="0.2" value="11.0">
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="form-group">
+                        <label for="asvauto-minPs">Desired Min PS (cmH₂O):</label>
+                        <input type="number" id="asvauto-minPs" min="0" max="20" step="0.2" value="5.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="asvauto-maxPs">Desired Max PS (cmH₂O):</label>
+                        <input type="number" id="asvauto-maxPs" min="0" max="30" step="0.2" value="7.0">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="asvauto-messages"></div>
+            
+            <div class="results">
+                <h3>Actual Machine Settings</h3>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="asvauto-actualMinEpap">Actual Min EPAP:</label>
+                            <input type="number" id="asvauto-actualMinEpap" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asvauto-actualMaxEpap">Actual Max EPAP:</label>
+                            <input type="number" id="asvauto-actualMaxEpap" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="asvauto-actualMinPs">Actual Min PS:</label>
+                            <input type="number" id="asvauto-actualMinPs" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asvauto-actualMaxPs">Actual Max PS:</label>
+                            <input type="number" id="asvauto-actualMaxPs" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="asvauto-ipapDisplay" class="ipap-display">
+                <h4>Calculated IPAP Values</h4>
+                <div class="row">
+                    <div class="col">
+                        <strong>Min IPAP:</strong> <span id="asvauto-minIpap">-</span> cmH₂O<br>
+                        <small>(Min EPAP + Min PS)</small>
+                    </div>
+                    <div class="col">
+                        <strong>Max IPAP:</strong> <span id="asvauto-maxIpap">-</span> cmH₂O<br>
+                        <small>(Max EPAP + Max PS)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ASV Calculator -->
+        <div id="asv-calculator" class="calculator-section">
+            <div class="constraint-info">
+                <h4>ResMed ASV Machine Settings:</h4>
+                <p>Configure your ResMed ASV mode settings below</p>
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="asv-epap">Desired EPAP (cmH₂O):</label>
+                        <input type="number" id="asv-epap" min="4" max="25" step="0.1" value="8.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="asv-minPs">Desired Min PS (cmH₂O):</label>
+                        <input type="number" id="asv-minPs" min="0" max="15" step="0.1" value="2.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="asv-maxPs">Desired Max PS (cmH₂O):</label>
+                        <input type="number" id="asv-maxPs" min="0" max="15" step="0.1" value="8.0">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="asv-messages"></div>
+            
+            <div class="results">
+                <h3>Actual Machine Settings</h3>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="asv-actualEpap">Actual EPAP:</label>
+                            <input type="number" id="asv-actualEpap" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asv-actualMinPs">Actual Min PS:</label>
+                            <input type="number" id="asv-actualMinPs" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asv-actualMaxPs">Actual Max PS:</label>
+                            <input type="number" id="asv-actualMaxPs" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VAuto Calculator -->
+        <div id="vauto-calculator" class="calculator-section">
+            <div class="constraint-info">
+                <h4>ResMed VAuto Machine Settings:</h4>
+                <p>Configure your ResMed VAuto mode settings below</p>
+            </div>
+            
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="vauto-maxIpap">Desired Max IPAP (cmH₂O):</label>
+                        <input type="number" id="vauto-maxIpap" min="4" max="25" step="0.1" value="20.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="vauto-minEpap">Desired Min EPAP (cmH₂O):</label>
+                        <input type="number" id="vauto-minEpap" min="4" max="25" step="0.1" value="8.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="vauto-ps">Desired PS (cmH₂O):</label>
+                        <input type="number" id="vauto-ps" min="0" max="10" step="0.1" value="5.0">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="vauto-messages"></div>
+            
+            <div class="results">
+                <h3>Actual Machine Settings</h3>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="vauto-actualMaxIpap">Actual Max IPAP:</label>
+                            <input type="number" id="vauto-actualMaxIpap" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vauto-actualMinEpap">Actual Min EPAP:</label>
+                            <input type="number" id="vauto-actualMinEpap" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vauto-actualPs">Actual PS:</label>
+                            <input type="number" id="vauto-actualPs" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Luna Calculator (Coming Soon) -->
+        <div id="luna-calculator" class="calculator-section">
+            <div class="coming-soon">
+                <div class="icon">🚧</div>
+                <h3>Luna Calculator Coming Soon</h3>
+                <p>We're working on adding Luna PAP device calculators. Check back soon for updates!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utility function for 0.2 increment rounding (ASVAuto only)
+        function roundToIncrement(value, increment = 0.2) {
+            return Math.round(value / increment) * increment;
+        }
+        
+        // Navigation
+        function showCalculator(type) {
+            // Hide all calculators
+            document.querySelectorAll('.calculator-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected calculator
+            document.getElementById(type + '-calculator').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Trigger calculation for the active calculator
+            if (type === 'asvauto') calculateASVAuto();
+            if (type === 'asv') calculateASV();
+            if (type === 'vauto') calculateVAuto();
+        }
+        
+        // ASVAuto Calculator (Corrected Algorithm)
+        function calculateASVAuto() {
+            // Get desired values and round to 0.2 increments
+            let desiredMinEpap = roundToIncrement(parseFloat(document.getElementById('asvauto-minEpap').value));
+            let desiredMaxEpap = roundToIncrement(parseFloat(document.getElementById('asvauto-maxEpap').value));
+            let desiredMinPs = roundToIncrement(parseFloat(document.getElementById('asvauto-minPs').value));
+            let desiredMaxPs = roundToIncrement(parseFloat(document.getElementById('asvauto-maxPs').value));
+            
+            let messages = [];
+            let actualMinEpap, actualMaxEpap, actualMinPs, actualMaxPs;
+            
+            // ResMed ASVAuto Machine Constraints (verified from testing)
+            const EPAP_MIN = 4.0;
+            const EPAP_MAX = 15.0;
+            const PS_MIN = 0.0;
+            const PS_ABSOLUTE_MAX = 20.0;
+            
+            // Step 1: Validate and adjust EPAP settings
+            actualMinEpap = Math.max(EPAP_MIN, Math.min(EPAP_MAX, desiredMinEpap));
+            actualMaxEpap = Math.max(EPAP_MIN, Math.min(EPAP_MAX, desiredMaxEpap));
+            
+            // Check EPAP constraints
+            if (desiredMinEpap < EPAP_MIN) {
+                messages.push(`Min EPAP ${desiredMinEpap} is below machine minimum. Machine will use ${actualMinEpap}.`);
+            }
+            if (desiredMinEpap > EPAP_MAX) {
+                messages.push(`Min EPAP ${desiredMinEpap} is above machine maximum. Machine will use ${actualMinEpap}.`);
+            }
+            if (desiredMaxEpap > EPAP_MAX) {
+                messages.push(`Max EPAP ${desiredMaxEpap} is above machine maximum. Machine will use ${actualMaxEpap}.`);
+            }
+            
+            // Ensure Min ≤ Max for EPAP
+            if (actualMinEpap > actualMaxEpap) {
+                actualMaxEpap = actualMinEpap;
+                messages.push(`Max EPAP adjusted to ${actualMaxEpap} to maintain Min ≤ Max relationship.`);
+            }
+            
+            // Step 2: Calculate PS maximum limit based on Min EPAP
+            // Formula discovered from testing: Max PS Limit = 25 - Min EPAP (ceiling at 20)
+            const psMaxLimit = Math.min(PS_ABSOLUTE_MAX, 25 - actualMinEpap);
+            
+            // Step 3: Validate and adjust PS settings
+            actualMinPs = Math.max(PS_MIN, Math.min(psMaxLimit, desiredMinPs));
+            actualMaxPs = Math.max(PS_MIN, Math.min(psMaxLimit, desiredMaxPs));
+            
+            // Check PS constraints
+            if (desiredMinPs < PS_MIN) {
+                messages.push(`Min PS ${desiredMinPs} is below machine minimum. Machine will use ${actualMinPs}.`);
+            }
+            if (desiredMinPs > psMaxLimit) {
+                messages.push(`Min PS ${desiredMinPs} exceeds limit for Min EPAP ${actualMinEpap}. Machine will use ${actualMinPs}.`);
+            }
+            if (desiredMaxPs > psMaxLimit) {
+                messages.push(`Max PS ${desiredMaxPs} exceeds limit for Min EPAP ${actualMinEpap}. Machine will use ${actualMaxPs}.`);
+            }
+            
+            // Ensure Min ≤ Max for PS
+            if (actualMinPs > actualMaxPs) {
+                actualMinPs = actualMaxPs;
+                messages.push(`Min PS adjusted to ${actualMinPs} to maintain Min ≤ Max relationship.`);
+            }
+            
+            // Update result fields
+            document.getElementById('asvauto-actualMinEpap').value = actualMinEpap.toFixed(1);
+            document.getElementById('asvauto-actualMaxEpap').value = actualMaxEpap.toFixed(1);
+            document.getElementById('asvauto-actualMinPs').value = actualMinPs.toFixed(1);
+            document.getElementById('asvauto-actualMaxPs').value = actualMaxPs.toFixed(1);
+            
+            // Calculate and display IPAP values
+            const minIpap = actualMinEpap + actualMinPs;
+            const maxIpap = actualMaxEpap + actualMaxPs;
+            document.getElementById('asvauto-minIpap').textContent = minIpap.toFixed(1);
+            document.getElementById('asvauto-maxIpap').textContent = maxIpap.toFixed(1);
+            
+            // Display messages
+            const messagesDiv = document.getElementById('asvauto-messages');
+            messagesDiv.innerHTML = '';
+            
+            if (messages.length === 0) {
+                messagesDiv.innerHTML = '<div class="info">All desired settings are within machine capabilities.</div>';
+            } else {
+                messages.forEach(message => {
+                    messagesDiv.innerHTML += `<div class="warning">${message}</div>`;
+                });
+            }
+            
+            // Add PS limit information
+            if (psMaxLimit < PS_ABSOLUTE_MAX) {
+                messagesDiv.innerHTML += `<div class="info">Note: With Min EPAP ${actualMinEpap}, Max PS is limited to ${psMaxLimit} cmH₂O.</div>`;
+            }
+        }
+        
+        // ASV Calculator (Original Interface)
+        function calculateASV() {
+            const desiredEpap = parseFloat(document.getElementById('asv-epap').value);
+            const desiredMinPs = parseFloat(document.getElementById('asv-minPs').value);
+            const desiredMaxPs = parseFloat(document.getElementById('asv-maxPs').value);
+            
+            let messages = [];
+            
+            // Basic ASV constraints (placeholder - need to implement original logic)
+            const EPAP_MIN = 4.0, EPAP_MAX = 25.0;
+            const PS_MIN = 0.0, PS_MAX = 15.0;
+            
+            let actualEpap = Math.max(EPAP_MIN, Math.min(EPAP_MAX, desiredEpap));
+            let actualMinPs = Math.max(PS_MIN, Math.min(PS_MAX, desiredMinPs));
+            let actualMaxPs = Math.max(PS_MIN, Math.min(PS_MAX, desiredMaxPs));
+            
+            // Ensure Min ≤ Max for PS
+            if (actualMinPs > actualMaxPs) {
+                actualMaxPs = actualMinPs;
+                messages.push('Max PS adjusted to maintain Min ≤ Max relationship.');
+            }
+            
+            // Update fields
+            document.getElementById('asv-actualEpap').value = actualEpap.toFixed(1);
+            document.getElementById('asv-actualMinPs').value = actualMinPs.toFixed(1);
+            document.getElementById('asv-actualMaxPs').value = actualMaxPs.toFixed(1);
+            
+            // Display messages
+            const messagesDiv = document.getElementById('asv-messages');
+            messagesDiv.innerHTML = '';
+            if (messages.length === 0) {
+                messagesDiv.innerHTML = '<div class="info">Settings applied. (Original ASV logic needs implementation)</div>';
+            } else {
+                messages.forEach(message => {
+                    messagesDiv.innerHTML += `<div class="warning">${message}</div>`;
+                });
+            }
+        }
+        
+        // VAuto Calculator (Original Interface)
+        function calculateVAuto() {
+            const desiredMaxIpap = parseFloat(document.getElementById('vauto-maxIpap').value);
+            const desiredMinEpap = parseFloat(document.getElementById('vauto-minEpap').value);
+            const desiredPs = parseFloat(document.getElementById('vauto-ps').value);
+            
+            let messages = [];
+            
+            // Basic VAuto constraints (placeholder - need to implement original logic)
+            const PRESSURE_MIN = 4.0, PRESSURE_MAX = 25.0;
+            const PS_MIN = 0.0, PS_MAX = 10.0;
+            
+            let actualMaxIpap = Math.max(PRESSURE_MIN, Math.min(PRESSURE_MAX, desiredMaxIpap));
+            let actualMinEpap = Math.max(PRESSURE_MIN, Math.min(PRESSURE_MAX, desiredMinEpap));
+            let actualPs = Math.max(PS_MIN, Math.min(PS_MAX, desiredPs));
+            
+            // Update fields
+            document.getElementById('vauto-actualMaxIpap').value = actualMaxIpap.toFixed(1);
+            document.getElementById('vauto-actualMinEpap').value = actualMinEpap.toFixed(1);
+            document.getElementById('vauto-actualPs').value = actualPs.toFixed(1);
+            
+            // Display messages
+            const messagesDiv = document.getElementById('vauto-messages');
+            messagesDiv.innerHTML = '';
+            messagesDiv.innerHTML = '<div class="info">Settings applied. (Original VAuto logic needs implementation)</div>';
+        }
+        
+        // Auto-calculate when values change for each calculator
+        document.addEventListener('DOMContentLoaded', function() {
+            // ASVAuto inputs
+            const asvAutoInputs = document.querySelectorAll('#asvauto-calculator input[type="number"]:not([readonly])');
+            asvAutoInputs.forEach(input => {
+                input.addEventListener('input', calculateASVAuto);
+                input.addEventListener('blur', function() {
+                    // Round to nearest 0.2 increment on blur for ASVAuto only
+                    this.value = roundToIncrement(parseFloat(this.value) || 0).toFixed(1);
+                    calculateASVAuto();
+                });
+            });
+            
+            // ASV inputs
+            const asvInputs = document.querySelectorAll('#asv-calculator input[type="number"]:not([readonly])');
+            asvInputs.forEach(input => {
+                input.addEventListener('input', calculateASV);
+            });
+            
+            // VAuto inputs  
+            const vAutoInputs = document.querySelectorAll('#vauto-calculator input[type="number"]:not([readonly])');
+            vAutoInputs.forEach(input => {
+                input.addEventListener('input', calculateVAuto);
+            });
+            
+            // Initial calculation for ASVAuto (default active)
+            calculateASVAuto();
+        });
+    </script>
+</body>
+</html>
